@@ -1,0 +1,11 @@
+{
+    "device": -1,
+    "epoch": 10000,
+    "hidden_dim": 50,
+    "log_dir": "log/",
+    "optimizer": "adam",
+    "tag": "20241210_1742_20",
+    "vmax": 0.9,
+    "vmin": 0.1,
+    "zero_state": false
+}
