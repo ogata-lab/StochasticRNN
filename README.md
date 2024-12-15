@@ -21,8 +21,8 @@ Paper: S. Murata, J. Namikawa, H. Arie, S. Sugano and J. Tani, ["Learning to Rep
 
 Implement the “Experiment 2: Probabilistic Lissajous curve with multiple constant values of noise dispersion” experiment from the original paper.
 
-## Train
-Here we describes how to set up an environment for model training. After cloning the repository, install the necessary packages using `pip`.
+## Training the Model
+This document explains how to set up the environment for model training. After cloning the repository, install the required packages using `pip`.
 
 ```bash
 $ git clone https://github.com/ogata-lab/StochasticRNN.git
@@ -31,7 +31,7 @@ $ pip3 install -U pip
 $ pip3 install -r requirements.txt
 ```
 
-The model is trained using the following command. Basically, you can get the expected results using the default parameters. If you set the argument `model` to BasicRNN, the training will be done using a vanilla RNN model that does not perform probability prediction.
+The model can be trained using the following command. By default, the provided parameters should produce expected results. If you set the `model` argument to `BasicRNN`, the training will use a vanilla RNN model that does not perform probabilistic predictions.
 
 ```bash
 $ source ~/.venv/srnn/bin/activation
@@ -59,15 +59,20 @@ norm min, max: 0.09635627492286805 0.8856249027486828
 ```
 
 ## Test
-The argument `input_param` is a variable that determines the proportion of the RNN's predicted values to be used as input. It takes a value between 0.0 and 1.0.
-When `input_param` is set to 0.0, it represents a closed-loop prediction, where the model predicts the entire time-series data based solely on the input data at time t.
-When `input_param` is set to 1.0, it represents an open-loop prediction, where input datas are directly fed into the model at each step without using the model's predictions (yt).
-A value of 0.5 indicates a mix of both, where the input is composed of 50% of the model's predicted datas and 50% of the input datas.
-The input data can be represented as:
+### Abount the `input_param` argument
+The input_param argument controls the proportion of the RNN's predicted values used as input. It accepts values between 0.0 and 1.0:
 
+- input_param = 0.0: Represents closed-loop prediction, where the model predicts the entire time-series data solely based on the input data at time step t.
+
+- input_param = 1.0: Represents open-loop prediction, where the input data at each step is directly fed into the model without using its predictions (yt).
+
+- Intermediate values (e.g., input_param = 0.5): Create a mix of both, with 50% of the input composed of the model's predictions and 50% of the actual input data.
+
+The input data can be represented as follows:
 `x_data = input_param * xt + (1 - input_param) * yt`
 
 
+### Results
 ```bash
 # The prediction results of a stochastic RNN using closed-loop prediction.
 $ python3 bin/test.py ./log/StochasticRNN/StochasticRNN.pth --input_param 0.0
@@ -76,7 +81,10 @@ $ python3 bin/test.py ./log/StochasticRNN/StochasticRNN.pth --input_param 0.0
 $ python3 bin/test.py ./log/BasicRNN/BasicRNN.pth --input_param 0.0
 ```
 
-The following figures show the results of generating time series waveforms using closed-loop prediction. The left figure shows the results of using the BasicRNN, and the right figure shows the results of using the proposed Stochastic RNN. The colors of the waveforms in the figures are the learning trajectory (blue) and the model's prediction results (black), respectively. The noise added to the learning trajectory is the same for each column, and is 0.01, 0.03, 0.05, and 0.07 from the left. The experimental results show that the BasicRNN, which directly predicts waveforms, is unable to generate some patterns appropriately. On the other hand, the Stochastic RNN is able to memorize and generate 12 time series patterns with different magnitudes of Gaussian noise variance.
+The following figures show the time-series waveforms generated using closed-loop prediction. The left figure shows the results of using the BasicRNN, and the right figure shows the results of using the Stochastic RNN. The colors of the waveforms in the figures are the learning trajectory (blue) and the model's prediction results (black), respectively. For each column, the same Gaussian noise was added to the learning trajectory, with variances of 0.01, 0.03, 0.05, and 0.07 (from left to right).
+
+The experimental results show that the BasicRNN, which directly predicts waveforms, struggles to generate some patterns appropriately. In contrast, the Stochastic RNN successfully memorizes and generates 12 time-series patterns under varying levels of Gaussian noise.
+
 
 |BasicRNN|StochasticRNN|
 |---|---|
