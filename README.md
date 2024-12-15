@@ -80,4 +80,4 @@ The following figures show the results of generating time series waveforms using
 
 |BasicRNN|StochasticRNN|
 |---|---|
-|![BasicRNN_ip00.png](./output/BasicRNN_ip00.png=300x)|![StochasticRNN_ip00.png](./output/StochasticRNN_ip00.png=300x)|
+|![BasicRNN_ip00.png](./output/BasicRNN_ip00.png)|![StochasticRNN_ip00.png](./output/StochasticRNN_ip00.png)|
