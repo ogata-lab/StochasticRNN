@@ -4,6 +4,7 @@
 #
 
 import torch
+import torch.nn as nn
 
 
 class fullBPTTtrainer:
@@ -17,8 +18,9 @@ class fullBPTTtrainer:
         device (str): Device to run the model on ('cpu' or 'cuda'). Defaults to 'cpu'.
     """
 
-    def __init__(self, model, dataset, optimizer, device="cpu"):
+    def __init__(self, model, dataset, optimizer, loss_type="NLL", device="cpu"):
         self.device = device
+        self.loss_type = loss_type
         self.optimizer = optimizer
         self.model = model.to(self.device)
 
@@ -45,9 +47,9 @@ class fullBPTTtrainer:
             savename,
         )
 
-    def calc_loss(self, y_true, y_pred_mean, y_pred_var):
+    def calc_nll_loss(self, y_true, y_pred_mean, y_pred_var):
         """
-        Calculate the log-likelihood loss function.
+        Calculate the negative log-likelihood loss function.
 
         Args:
             y_true (torch.Tensor): Ground truth values.
@@ -77,10 +79,15 @@ class fullBPTTtrainer:
         self.optimizer.zero_grad(set_to_none=True)
         for t in range(T):
             # Forward pass through the model for time step t
-            y_mean, y_var, states = self.model.forward(self.x_data[:, t], states)
+            y_out, states = self.model.forward(self.x_data[:, t], states)
 
-            # Calculate negative log-likelihood loss
-            total_loss += self.calc_loss(self.y_data[:, t], y_mean, y_var)
+            if self.loss_type == "NLL":
+                # Calculate negative log-likelihood loss
+                y_mean, y_var = y_out
+                total_loss += self.calc_nll_loss(self.y_data[:, t], y_mean, y_var)
+            else:
+                # Calculate negative log-likelihood loss
+                total_loss += nn.MSELoss()(self.y_data[:, t], y_out)
 
         total_loss /= T
         # Backward pass and parameter update

@@ -15,20 +15,22 @@ from torch.utils.tensorboard import SummaryWriter
 sys.path.append("./libs/")
 from utils import normalization
 from utils import check_args, set_logdir
-from model import SRNN
+from model import StochasticRNN, BasicRNN
 from dataset import get_dataset
 from fullBPTT import fullBPTTtrainer
 
 
 # argument parser
 parser = argparse.ArgumentParser(description="Learning Stochastic RNN")
+parser.add_argument("--model", type=str, default="StochasticRNN")  # or BasicRNN
 parser.add_argument("--epoch", type=int, default=10000)
-parser.add_argument("--hidden_dim", type=int, default=50)
+parser.add_argument("--hidden_dim", type=int, default=100)
 parser.add_argument("--optimizer", type=str, default="adam")
 parser.add_argument("--log_dir", default="log/")
 parser.add_argument("--vmin", type=float, default=0.1)
 parser.add_argument("--vmax", type=float, default=0.9)
 parser.add_argument("--device", type=int, default=-1)
+parser.add_argument("--save_step", type=int, default=1000)
 parser.add_argument("--zero_state", action="store_true")
 parser.add_argument("--tag", help="Tag name for snap/log sub directory")
 args = parser.parse_args()
@@ -53,9 +55,19 @@ print("norm min, max:", norm_dataset.min(), norm_dataset.max())
 
 
 # define model, optimizer, and trainer
-model = SRNN(input_dim=2, hidden_dim=args.hidden_dim, output_dim=2, seq_len=seq_len, zero_state=args.zero_state)
-optimizer = optim.Adam(model.parameters())
-trainer = fullBPTTtrainer(model, norm_dataset, optimizer, device=device)
+if args.model == "StochasticRNN":
+    model = StochasticRNN(
+        input_dim=2, hidden_dim=args.hidden_dim, output_dim=2, seq_len=seq_len, zero_state=args.zero_state
+    )
+    optimizer = optim.Adam(model.parameters())
+    trainer = fullBPTTtrainer(model, norm_dataset, optimizer, loss_type="NLL", device=device)
+elif args.model == "BasicRNN":
+    model = BasicRNN(input_dim=2, hidden_dim=args.hidden_dim, output_dim=2, seq_len=seq_len, zero_state=args.zero_state)
+    optimizer = optim.Adam(model.parameters())
+    trainer = fullBPTTtrainer(model, norm_dataset, optimizer, loss_type="MSE", device=device)
+else:
+    print(f"Error: Invalid model '{args.model}'. Supported models are 'StochasticRNN' and 'BasicRNN'.")
+    exit(1)
 
 ### training main
 log_dir_path = set_logdir("./" + args.log_dir, args.tag)
@@ -70,6 +82,9 @@ with tqdm(range(args.epoch)) as pbar_epoch:
         # print process bar
         pbar_epoch.set_postfix(OrderedDict(train_loss=train_loss))
 
-# save_name = os.path.join(log_dir_path, "SRNN_{}.pth".format(epoch))
-save_name = os.path.join(log_dir_path, "SRNN.pth".format(epoch))
+        if epoch % args.save_step == 0 and epoch > 0:
+            save_name = os.path.join(log_dir_path, "{}_{}.pth".format(args.model, epoch))
+            trainer.save(epoch, train_loss, save_name)
+
+save_name = os.path.join(log_dir_path, "{}.pth".format(args.model))
 trainer.save(epoch, train_loss, save_name)

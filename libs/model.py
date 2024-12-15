@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 
-class SRNN(nn.Module):
+class BasicRNN(nn.Module):
     """
     A simple recurrent neural network (SRNN) implementation with LSTMCell.
 
@@ -18,7 +18,61 @@ class SRNN(nn.Module):
     """
 
     def __init__(self, input_dim, hidden_dim, output_dim, seq_len=None, zero_state=False):
-        super(SRNN, self).__init__()
+        super(BasicRNN, self).__init__()
+
+        # Define LSTM cell for recurrent hidden state updates
+        self.h2h = nn.LSTMCell(input_dim, hidden_dim)
+
+        # Define output layers
+        self.h2o = nn.Linear(hidden_dim, output_dim)  # Output
+
+        if zero_state:
+            self.initial_states = None
+        else:
+            self.initial_states = [
+                nn.Parameter(torch.zeros(seq_len, hidden_dim), requires_grad=True),
+                nn.Parameter(torch.zeros(seq_len, hidden_dim), requires_grad=True),
+            ]
+            self.register_parameter("initial_h", self.initial_states[0])
+            self.register_parameter("initial_c", self.initial_states[1])
+
+    def get_initial_states(self):
+        return self.initial_states
+
+    def forward(self, x, state=None):
+        """
+        Forward pass for the SRNN model.
+
+        Args:
+            x (torch.Tensor): Input tensor for the current time step.
+            state (tuple, optional): Tuple of (hidden_state, cell_state) from the previous time step. Defaults to None.
+
+        Returns:
+            out_mean (torch.Tensor): Predicted mean values.
+            out_var (torch.Tensor): Predicted variance values.
+            state (tuple): Updated (hidden_state, cell_state) for the next time step.
+        """
+        # Compute hidden and cell states using LSTMCell
+        rnn_state = self.h2h(x, state)
+
+        # Calculate mean output using tanh activation
+        output = torch.tanh(self.h2o(rnn_state[0]))
+
+        return output, rnn_state
+
+
+class StochasticRNN(nn.Module):
+    """
+    A Stochastic Recurrent Neural Network (StochasticRNN) implementation with LSTMCell.
+
+    Args:
+        input_dim (int): Dimension of the input features.
+        hidden_dim (int): Dimension of the hidden state.
+        output_dim (int): Dimension of the output.
+    """
+
+    def __init__(self, input_dim, hidden_dim, output_dim, seq_len=None, zero_state=False):
+        super(StochasticRNN, self).__init__()
 
         # Define LSTM cell for recurrent hidden state updates
         self.h2h = nn.LSTMCell(input_dim, hidden_dim)
@@ -62,7 +116,7 @@ class SRNN(nn.Module):
         # Calculate variance output using exponential to ensure non-negativity
         out_var = torch.exp(self.h2v(rnn_state[0]))
 
-        return out_mean, out_var, rnn_state
+        return [out_mean, out_var], rnn_state
 
 
 if __name__ == "__main__":

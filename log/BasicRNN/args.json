@@ -1,0 +1,12 @@
+{
+    "device": -1,
+    "epoch": 10000,
+    "hidden_dim": 100,
+    "log_dir": "log/",
+    "model": "BasicRNN",
+    "optimizer": "adam",
+    "tag": "BasicRNN",
+    "vmax": 0.9,
+    "vmin": 0.1,
+    "zero_state": false
+}
