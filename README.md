@@ -27,8 +27,9 @@ This document explains how to set up the environment for model training. After c
 ```bash
 $ git clone https://github.com/ogata-lab/StochasticRNN.git
 $ python3 -m venv ~/.venv/srnn
-$ pip3 install -U pip
-$ pip3 install -r requirements.txt
+$ source ~/.venv/srnn/bin/activation
+(srnn)$ pip3 install -U pip
+(srnn)$ pip3 install -r requirements.txt
 ```
 
 The model can be trained using the following command. By default, the provided parameters should produce expected results. If you set the `model` argument to `BasicRNN`, the training will use a vanilla RNN model that does not perform probabilistic predictions.
