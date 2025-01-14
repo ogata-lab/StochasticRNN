@@ -10,7 +10,7 @@ Paper: S. Murata, J. Namikawa, H. Arie, S. Sugano and J. Tani, ["Learning to Rep
 
 # Requirements
 
-- tqdm 4.66.1
+- tqdm 4.67.1
 - torch 2.3.0
 - torchinfo 1.8.0
 - matplotlib 3.8.2

@@ -60,6 +60,7 @@ class fullBPTTtrainer:
             torch.Tensor: Mean negative log-likelihood loss.
         """
         constant_term = (torch.log(2 * torch.pi * y_pred_var)) / 2
+        constant_term = torch.clamp(constant_term, min=1e-6)
         squared_error = ((y_true - y_pred_mean) ** 2) / (2 * y_pred_var)
         log_likelihood = constant_term + squared_error
 
